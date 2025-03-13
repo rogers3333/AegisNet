@@ -12,10 +12,14 @@ pub mod utils;
 use anyhow::Result;
 use tracing::info;
 use std::sync::Arc;
+use prometheus::Registry;
 
 /// 控制器初始化函数
 pub async fn init() -> Result<()> {
     info!("初始化 AegisNet 控制平面");
+    
+    // 创建Prometheus注册表
+    let registry = Registry::new();
     
     // 初始化身份管理系统
     let identity_client = identity::init_identity_system().await?;
@@ -23,6 +27,7 @@ pub async fn init() -> Result<()> {
     
     // 初始化策略管理系统
     let policy_watcher = policy::init_policy_system().await?;
+    let policy_generator = Arc::new(policy::create_default_generator());
     info!("策略管理系统初始化完成");
     
     // 初始化集群同步系统
@@ -33,6 +38,14 @@ pub async fn init() -> Result<()> {
     let ai_model = ai::init_ai_system().await?;
     info!("AI 系统初始化完成");
     
-    info!("AegisNet 控制平面初始化完成");
+    // 初始化策略优化系统
+    let policy_optimizer = ai::init_policy_optimization_system(
+        ai_model,
+        policy_generator,
+        &registry
+    ).await?;
+    info!("策略优化系统初始化完成");
+    
+    info!("AegisNet 控制平面初始化完成，策略优化闭环已启动");
     Ok(())
 }

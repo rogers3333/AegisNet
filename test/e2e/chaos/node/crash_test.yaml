@@ -1,0 +1,49 @@
+# 节点崩溃测试场景
+apiVersion: aegisnet.io/v1alpha1
+kind: ChaosTest
+metadata:
+  name: node-crash-test
+spec:
+  description: "测试AegisNet在节点崩溃情况下的恢复能力"
+  target:
+    namespace: aegisnet-system
+    selector:
+      matchLabels:
+        app: aegisnet-agent
+  chaosType: PodChaos
+  duration: 300s # 5分钟测试
+  mode: random # 随机选择节点
+  selector:
+    value: "30%" # 影响30%的节点
+  scheduler:
+    cron: "@once" # 只执行一次
+  podChaos:
+    action: pod-kill # 杀死Pod
+    gracePeriod: 0 # 立即终止
+    maxPods: 5 # 最多影响5个Pod
+  metrics:
+    - name: recovery-time
+      description: "系统恢复正常所需时间"
+      type: latency
+      unit: seconds
+      threshold: 60.0
+    - name: policy-enforcement
+      description: "节点恢复后策略执行成功率"
+      type: percentage
+      threshold: 100.0
+  assertions:
+    - type: log
+      target: aegisnet-controller
+      pattern: "agent reconnected"
+      occurrences: ">= 1" # 至少出现一次重连日志
+    - type: resource
+      kind: Pod
+      namespace: aegisnet-system
+      selector: app=aegisnet-agent
+      condition: "count() == original_count" # 确保所有Pod都恢复
+      timeout: 120s
+  reporting:
+    outputDir: "../reports/node-crash"
+    format:
+      - json
+      - html

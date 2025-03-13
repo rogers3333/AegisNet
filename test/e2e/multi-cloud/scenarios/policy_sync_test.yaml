@@ -1,0 +1,67 @@
+# 策略同步延迟测试场景
+apiVersion: aegisnet.io/v1alpha1
+kind: TestScenario
+metadata:
+  name: policy-sync-latency
+spec:
+  description: "测试跨云环境下零信任策略的同步延迟"
+  clusters:
+    - name: eks-cluster
+      provider: aws
+      context: eks-cluster-context
+    - name: gke-cluster
+      provider: gcp
+      context: gke-cluster-context
+  testCases:
+    - name: basic-policy-sync
+      description: "基本策略同步测试"
+      steps:
+        - name: deploy-policy
+          action: apply
+          cluster: eks-cluster
+          resource:
+            apiVersion: aegisnet.io/v1alpha1
+            kind: ZeroTrustPolicy
+            metadata:
+              name: test-policy-1
+              namespace: default
+            spec:
+              selector:
+                matchLabels:
+                  app: test-app
+              rules:
+                - name: allow-http
+                  rule_type: Ingress
+                  action: Allow
+                  ports:
+                    - port: 80
+                  protocols:
+                    - TCP
+        - name: wait-for-sync
+          action: wait
+          duration: 60s
+        - name: verify-policy
+          action: verify
+          cluster: gke-cluster
+          resource:
+            apiVersion: aegisnet.io/v1alpha1
+            kind: ZeroTrustPolicy
+            metadata:
+              name: test-policy-1
+              namespace: default
+  metrics:
+    - name: sync-latency
+      type: latency
+      description: "策略同步延迟"
+      unit: seconds
+      threshold: 5.0
+    - name: sync-success-rate
+      type: percentage
+      description: "策略同步成功率"
+      unit: percent
+      threshold: 99.0
+  reporting:
+    outputDir: "../reports/policy-sync"
+    format: 
+      - json
+      - html

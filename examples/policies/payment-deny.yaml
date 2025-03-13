@@ -1,0 +1,43 @@
+apiVersion: aegisnet.io/v1alpha1
+kind: ZeroTrustPolicy
+metadata:
+  name: payment-deny
+  namespace: default
+spec:
+  # 策略选择器，应用于带有app=payment标签的工作负载
+  selector:
+    matchLabels:
+      app: payment
+  # 策略规则
+  rules:
+    # 拒绝未授权服务访问支付服务
+    - name: deny-unauthorized-access
+      rule_type: Ingress
+      action: Deny
+      # 默认拒绝所有入站流量
+      ports:
+        - port: 8080  # 支付服务端口
+      protocols:
+        - TCP
+    # 仅允许授权服务访问
+    - name: allow-authorized-services
+      rule_type: Ingress
+      action: Allow
+      from:
+        endpoint_type: Pod
+        selector:
+          matchLabels:
+            role: authorized-client
+            security-tier: trusted
+      ports:
+        - port: 8080
+      protocols:
+        - TCP
+  # 策略优先级，数字越小优先级越高
+  priority: 100
+  # 策略模式：Enforce（强制执行）
+  mode: Enforce
+  # 策略标签
+  labels:
+    type: security
+    criticality: high

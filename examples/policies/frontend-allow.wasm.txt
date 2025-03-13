@@ -1,0 +1,33 @@
+# frontend-allow.wasm
+
+这是一个编译后的WebAssembly策略文件示例说明。
+
+## 文件说明
+
+实际的frontend-allow.wasm文件是一个二进制WebAssembly文件，用于定义允许前端服务访问的零信任策略。
+由于.wasm是二进制格式，无法直接在文本编辑器中查看或编辑。
+
+## 如何生成
+
+1. 编写策略源代码（通常使用Rust、AssemblyScript或C/C++）
+2. 使用相应的编译器编译为WebAssembly格式
+3. 使用AegisNet的策略加载器加载到系统中
+
+## 策略内容说明
+
+此策略允许带有`app=frontend`标签的服务访问特定的后端API：
+
+- 允许前端服务访问API网关（端口443）
+- 允许前端服务访问静态资源服务（端口80）
+- 允许前端服务访问用户服务API（端口8000）
+- 拒绝前端服务访问其他所有服务
+
+## 使用方法
+
+```bash
+# 加载策略到AegisNet
+aegisnet policy load frontend-allow.wasm --namespace default
+
+# 验证策略是否生效
+aegisnet policy verify frontend-allow --namespace default
+```

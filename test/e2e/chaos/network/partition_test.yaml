@@ -1,0 +1,57 @@
+# 网络分区测试场景
+apiVersion: aegisnet.io/v1alpha1
+kind: ChaosTest
+metadata:
+  name: network-partition-test
+spec:
+  description: "测试AegisNet在网络分区情况下的行为"
+  target:
+    namespace: aegisnet-system
+    selector:
+      matchLabels:
+        app: aegisnet-controller
+  chaosType: NetworkPartition
+  duration: 300s # 5分钟测试
+  mode: one # 一次只影响一个组件
+  scheduler:
+    cron: "@once" # 只执行一次
+  networkChaos:
+    direction: both # 入站和出站流量都受影响
+    target:
+      selector:
+        matchLabels:
+          app: aegisnet-agent
+      mode: random
+      value: "50%" # 随机选择50%的agent节点
+    delay:
+      latency: "200ms"
+      correlation: "25%"
+      jitter: "50ms"
+    loss:
+      loss: "10%"
+      correlation: "25%"
+  metrics:
+    - name: policy-enforcement
+      description: "网络分区期间策略执行成功率"
+      type: percentage
+      threshold: 95.0
+    - name: recovery-time
+      description: "系统恢复正常所需时间"
+      type: latency
+      unit: seconds
+      threshold: 30.0
+  assertions:
+    - type: log
+      target: aegisnet-controller
+      pattern: "reconnecting to agent"
+      occurrences: ">= 1" # 至少出现一次重连日志
+    - type: metric
+      name: "controller_agent_connections"
+      operator: "<"
+      value: "total_agents" # 连接数应小于总agent数
+      duration: "during-chaos"
+  reporting:
+    outputDir: "../reports/network-partition"
+    format:
+      - json
+      - html
