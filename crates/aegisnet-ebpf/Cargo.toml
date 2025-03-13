@@ -1,0 +1,29 @@
+[package]
+name = "aegisnet-ebpf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+aya = { workspace = true }
+aya-log = { workspace = true }
+wasmedge-sdk = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+snow = { workspace = true }
+spiffe = { workspace = true }
+aegisnet-common = { path = "../aegisnet-common" }
+
+[build-dependencies]
+aya-tool = "0.1"
+
+[dev-dependencies]
+serial_test = "2.0"
+rstest = "0.18"

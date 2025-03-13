@@ -1,0 +1,49 @@
+[package]
+name = "aegisnet-agent"
+version = "0.1.0"
+edition = "2021"
+description = "AegisNet Agent - 用户态守护进程管理 eBPF 程序"
+authors = ["AegisNet Team"]
+
+[dependencies]
+# eBPF 相关依赖
+aya = { version = "0.11", features = ["async_tokio"] }
+aya-log = "0.1"
+
+# 异步运行时
+tokio = { version = "1.28", features = ["full"] }
+
+# 配置处理
+config = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1.0"
+
+# 日志处理
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# 指标收集与导出
+prometheus = "0.13"
+prometheus-hyper = "0.1"
+hyper = { version = "0.14", features = ["server", "http1", "tcp"] }
+
+# 错误处理
+anyhow = "1.0"
+thiserror = "1.0"
+
+# 其他工具
+clap = { version = "4.2", features = ["derive"] }
+once_cell = "1.17"
+notify = "5.1"
+
+[dependencies.aegisnet-common]
+path = "../aegisnet-common"
+
+[dependencies.aegisnet-ebpf]
+path = "../aegisnet-ebpf"
+
+[dev-dependencies]
+test-log = "0.2"
+tempfile = "3.5"
+mockall = "0.11"
